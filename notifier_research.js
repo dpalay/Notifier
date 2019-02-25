@@ -36,6 +36,10 @@ db.run("INSERT INTO notifiers VALUES (1,'test','me')")
 db.all("SELECT * FROM notifiers", (e, r) => { console.log(r); })
 
 
+//better-sqlite3
+let sqlite3 = require('better-sqlite3')
+let db = new sqlite3('./Notifier.db')
+da.prepare("SELECT * FROM notifiers").get()
 
 
 // node persist
@@ -43,4 +47,22 @@ const storage = require('node-persist');
 storage.initSync({
     dir: './database',
     ttl: 1000 * 60 * 2
+})
+
+storage.forEach((k, v) => {
+    if (v.expires <= Date.now()) {
+        storage.removeItemSync(k); // remove the raid to disk
+    } else {
+
+        activeRaids[k] = new raid(v.time, v.poke.id, v.location, v.owner, v.owner.count, v.id);
+        activeRaids[k].gym = v.gym;
+        activeRaids[k].locationComment = v.locationComment
+        activeRaids[k].expires = v.expires
+        activeRaids[k].owner = v.owner
+        activeRaids[k].attendees = {}
+        _.each(v.attendees, (att) => {
+            activeRaids[k].attendees[att.id] = new attendee(att.id, att.username, att.mention, att.count)
+        })
+        activeRaids[k].to = setTimeout(() => clearRaidID(activeRaids[k].id), activeRaids[k].expires - Date.now())
+    }
 })
